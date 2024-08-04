@@ -25,4 +25,13 @@ export class AppService {
     }
     return user;
   }
+
+  async findById(id: number): Promise<User | undefined> {
+    const user = await this.userRepository.findOne({
+      where:
+          {id: id}
+        }
+    );
+    return user;
+  }
 }
