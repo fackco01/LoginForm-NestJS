@@ -3,6 +3,7 @@ import {AppService} from './app.service';
 import * as bcrypt from 'bcrypt';
 import {JwtService} from "@nestjs/jwt";
 import {Response, Request} from "express";
+import { ApiBody, ApiCookieAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller()
 export class AppController {
@@ -14,6 +15,21 @@ export class AppController {
 
     //API Register
     @Post('register')
+    @ApiOperation({ summary: 'Register a new user' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['username', 'fullName', 'email', 'password'],
+            properties: {
+                username: { type: 'string', example: 'username' },
+                fullName: { type: 'string', example: 'fullName' },
+                email: { type: 'string', format: 'email', example: 'user@example.com' },
+                password: { type: 'string', format: 'password', example: 'strongpassword123' }
+            }
+        }
+    })
+    @ApiResponse({ status: 201, description: 'User successfully registered' })
+    @ApiResponse({ status: 400, description: 'Bad request' })
     async register(
         @Body('username') username: string,
         @Body('fullName') fullName: string,
@@ -35,6 +51,31 @@ export class AppController {
 
     //API Login
     @Post('login')
+    @ApiOperation({ summary: 'User login' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['username', 'password'],
+            properties: {
+                username: { type: 'string', example: 'username' },
+                password: { type: 'string', format: 'password', example: 'strongpassword123' }
+            }
+        }
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Login successful',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string', example: 'Login Success' },
+                username: { type: 'string', example: 'username' },
+                fullName: { type: 'string', example: 'fullName' },
+                email: { type: 'string', example: 'john@example.com' }
+            }
+        }
+    })
+    @ApiResponse({ status: 400, description: 'Bad request - User not found or wrong password' })
     async login(
         @Body('username') username: string,
         @Body('password') password: string,
@@ -64,6 +105,22 @@ export class AppController {
 
     //Get User
     @Get('user')
+    @ApiOperation({ summary: 'Get current user information' })
+    @ApiCookieAuth()
+    @ApiResponse({
+        status: 200,
+        description: 'User information retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                id: { type: 'number', example: 1 },
+                username: { type: 'string', example: 'johndoe' },
+                fullName: { type: 'string', example: 'John Doe' },
+                email: { type: 'string', example: 'john@example.com' }
+            }
+        }
+    })
+    @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT token' })
     async user(
         @Req() request: Request
     ){
@@ -88,6 +145,18 @@ export class AppController {
 
     //Logout
     @Post('logout')
+    @ApiOperation({ summary: 'User logout' })
+    @ApiCookieAuth()
+    @ApiResponse({
+        status: 200,
+        description: 'Logout successful',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string', example: 'Logout Success' }
+            }
+        }
+    })
     async logout(
         @Res({passthrough: true}) resonse: Response
     ){
